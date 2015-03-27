@@ -14,12 +14,17 @@ func (pd *ProcDiff) Contains(cmd ...string) {
 	maxp, e := linux.ReadMaxPID("/proc/sys/kernel/pid_max")
 	check(e)
 	for p := uint64(1); p < maxp; p++ {
+		// Do not check it's own PID
+		if int(p) == selfPID {
+			continue
+		}
 		proc, e := linux.ReadProcess(p, "/proc")
 		if e != nil {
 			continue
 		}
 		for _, c := range cmd {
-			if strings.Contains(proc.Cmdline, c) {
+			// ExitSignal to check threads
+			if strings.Contains(proc.Cmdline, c) && proc.Stat.ExitSignal != -1 {
 				*pd = append(*pd, &Proc{p, proc.Cmdline, nil, nil, 0})
 				break
 			}

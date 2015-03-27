@@ -11,6 +11,8 @@ var (
 	fsys = flag.String("s", "usr1", "kill syscall sent")
 	fper = flag.Float64("p", 90, "percentage threshold before sending a kill signal")
 	fdur = flag.Duration("d", time.Duration(time.Minute), "duration")
+
+	selfPID int = os.Getpid()
 )
 
 func check(e error) {
