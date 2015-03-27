@@ -21,6 +21,7 @@ func (pd *ProcDiff) Contains(cmd ...string) {
 		for _, c := range cmd {
 			if strings.Contains(proc.Cmdline, c) {
 				*pd = append(*pd, &Proc{p, proc.Cmdline, nil, nil, 0})
+				break
 			}
 		}
 	}

@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -34,13 +32,6 @@ func checkProcs(ss ...string) []uint64 {
 			log.Printf("[WARNING]: %v: %v%% (%v)", p.Pid, p.Per, p.Cmd)
 			pdf = append(pdf, p.Pid)
 		}
-	}
-
-	if len(pdf) > 0 {
-		b, e := json.Marshal(pdf)
-		check(e)
-		e = ioutil.WriteFile("pids", b, 0644)
-		check(e)
 	}
 	log.Printf("Found \033[1m%v\033[0m corresponding processes, with \033[1m%v\033[0m > %v%%.\n", len(*pd), len(pdf), *fper)
 
