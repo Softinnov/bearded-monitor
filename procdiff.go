@@ -24,7 +24,7 @@ func (pd *ProcDiff) Contains(cmd ...string) {
 		}
 		for _, c := range cmd {
 			// ExitSignal to check threads
-			if strings.Contains(proc.Cmdline, c) && proc.Stat.ExitSignal != -1 {
+			if strings.Contains(proc.Cmdline, c) && proc.Status.Tgid == proc.Status.Pid {
 				*pd = append(*pd, &Proc{p, proc.Cmdline, nil, nil, 0})
 				break
 			}
