@@ -41,8 +41,8 @@ func checkProcs(ss ...string) []uint64 {
 }
 
 func killProcs(pd, npd []uint64) {
-	for _, p := range pd {
-		for _, np := range npd {
+	for _, np := range npd {
+		for _, p := range pd {
 			if p != np {
 				continue
 			}
@@ -70,13 +70,12 @@ func main() {
 	log.Printf("Looking for %%CPU usage higher than %v%%\n", *fper)
 	log.Printf("Kill signal to send: %q\n\n", sysc[*fsys])
 
+	var pd, npd []uint64
 	for {
-		pd := checkProcs(flag.Args()...)
-		time.Sleep(*fdur)
-		npd := checkProcs(flag.Args()...)
+		pd = checkProcs(flag.Args()...)
 
 		killProcs(pd, npd)
-		log.Println("[CLEANING] stored PIDs\n")
 		time.Sleep(*fdur)
+		npd = pd
 	}
 }
