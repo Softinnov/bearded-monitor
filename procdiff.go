@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -69,7 +70,7 @@ func (pd *ProcDiff) Percentage() {
 		user := int64(p2.Stat.Utime-p1.Stat.Utime) + (p2.Stat.Cutime - p1.Stat.Cutime)
 		system := int64(p2.Stat.Stime-p1.Stat.Stime) + (p2.Stat.Cstime - p1.Stat.Cstime)
 
-		p.Per = (float64(user+system) / float64((cpu2-cpu1)/8)) * 100
+		p.Per = (float64(user+system) / float64((cpu2-cpu1)/uint64(runtime.NumCPU()))) * 100
 	}
 }
 
