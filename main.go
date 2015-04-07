@@ -15,12 +15,6 @@ var (
 	selfPID int = os.Getpid()
 )
 
-func check(e error) {
-	if e != nil {
-		log.Fatal(e)
-	}
-}
-
 func main() {
 
 	flag.Parse()

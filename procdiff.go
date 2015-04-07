@@ -15,7 +15,10 @@ type ProcDiff []*Proc
 func (pd *ProcDiff) Contains(cmd ...string) {
 
 	maxp, e := linux.ReadMaxPID("/proc/sys/kernel/pid_max")
-	check(e)
+	if e != nil {
+		log.Println(e)
+		return
+	}
 	for p := uint64(1); p < maxp; p++ {
 		// Do not check it's own PID
 		if int(p) == selfPID {
@@ -38,8 +41,10 @@ func (pd *ProcDiff) Contains(cmd ...string) {
 func cpu() uint64 {
 
 	cpu, e := linux.ReadStat("/proc/stat")
-	check(e)
-
+	if e != nil {
+		log.Println(e)
+		return 0
+	}
 	c := cpu.CPUStatAll
 	return c.User + c.Nice + c.System + c.Idle
 }
@@ -48,7 +53,10 @@ func (pd *ProcDiff) Percentage() {
 
 	for _, p := range *pd {
 		r, e := linux.ReadProcess(p.Pid, "/proc")
-		check(e)
+		if e != nil {
+			log.Println(e)
+			continue
+		}
 		p.Fir = r
 	}
 	cpu1 := cpu()
@@ -57,7 +65,10 @@ func (pd *ProcDiff) Percentage() {
 
 	for _, p := range *pd {
 		r, e := linux.ReadProcess(p.Pid, "/proc")
-		check(e)
+		if e != nil {
+			log.Println(e)
+			continue
+		}
 		p.Sec = r
 	}
 
@@ -100,10 +111,14 @@ func killProcs(pd, npd []uint64) {
 				continue
 			}
 			proc, e := os.FindProcess(int(p))
-			check(e)
+			if e != nil {
+				log.Println(e)
+			}
 			log.Printf("[KILL] sent signal %s to %v\n", *fsys, proc.Pid)
 			e = proc.Signal(sysc[*fsys])
-			check(e)
+			if e != nil {
+				log.Println(e)
+			}
 		}
 	}
 }
