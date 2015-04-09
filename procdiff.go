@@ -78,6 +78,9 @@ func (pd *ProcDiff) Percentage() {
 
 		p1 := p.Fir
 		p2 := p.Sec
+		if p1 == nil || p2 == nil {
+			continue
+		}
 		user := int64(p2.Stat.Utime-p1.Stat.Utime) + (p2.Stat.Cutime - p1.Stat.Cutime)
 		system := int64(p2.Stat.Stime-p1.Stat.Stime) + (p2.Stat.Cstime - p1.Stat.Cstime)
 
