@@ -102,7 +102,7 @@ func checkProcs(ss ...string) []uint64 {
 			pdf = append(pdf, p.Pid)
 		}
 	}
-	log.Printf("Found \033[1m%v\033[0m corresponding processes, with \033[1m%v\033[0m > %v%%.\n", len(*pd), len(pdf), *fper)
+	//log.Printf("Found \033[1m%v\033[0m corresponding processes, with \033[1m%v\033[0m > %v%%.\n", len(*pd), len(pdf), *fper)
 
 	return pdf
 }
