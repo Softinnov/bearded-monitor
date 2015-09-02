@@ -2,8 +2,11 @@ package main
 
 import (
 	"log"
+	"math"
 	"os"
+	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,14 +27,22 @@ func (pd *ProcDiff) Contains(cmd ...string) {
 		if int(p) == selfPID {
 			continue
 		}
-		proc, e := linux.ReadProcess(p, "/proc")
+		sp := strconv.FormatUint(p, 10)
+		status, e := linux.ReadProcessStatus(filepath.Join("/proc", sp, "status"))
 		if e != nil {
 			continue
 		}
+		cmdline, e := linux.ReadProcessCmdline(filepath.Join("/proc", sp, "cmdline"))
+		if e != nil {
+			continue
+		}
+		// Tgid != Pid for a thread
+		if status.Tgid != status.Pid {
+			continue
+		}
 		for _, c := range cmd {
-			// Tgid != Pid for a thread
-			if strings.Contains(proc.Cmdline, c) && proc.Status.Tgid == proc.Status.Pid {
-				*pd = append(*pd, &Proc{p, proc.Cmdline, nil, nil, 0})
+			if strings.Contains(cmdline, c) {
+				*pd = append(*pd, &Proc{p, cmdline, nil, nil, 0})
 				break
 			}
 		}
@@ -40,19 +51,20 @@ func (pd *ProcDiff) Contains(cmd ...string) {
 
 func cpu() uint64 {
 
-	cpu, e := linux.ReadStat("/proc/stat")
+	stat, e := linux.ReadStat("/proc/stat")
 	if e != nil {
 		log.Println(e)
 		return 0
 	}
-	c := cpu.CPUStatAll
-	return c.User + c.Nice + c.System + c.Idle
+	s := stat.CPUStatAll
+	return s.User + s.Nice + s.System + s.Idle
 }
 
 func (pd *ProcDiff) Percentage() {
 
 	for _, p := range *pd {
-		r, e := linux.ReadProcess(p.Pid, "/proc")
+		sp := strconv.FormatUint(p.Pid, 10)
+		r, e := linux.ReadProcessStat(filepath.Join("/proc", sp, "stat"))
 		if e != nil {
 			log.Println(e)
 			continue
@@ -64,7 +76,8 @@ func (pd *ProcDiff) Percentage() {
 	time.Sleep(time.Second)
 
 	for _, p := range *pd {
-		r, e := linux.ReadProcess(p.Pid, "/proc")
+		sp := strconv.FormatUint(p.Pid, 10)
+		r, e := linux.ReadProcessStat(filepath.Join("/proc", sp, "stat"))
 		if e != nil {
 			log.Println(e)
 			continue
@@ -81,8 +94,8 @@ func (pd *ProcDiff) Percentage() {
 		if p1 == nil || p2 == nil {
 			continue
 		}
-		user := int64(p2.Stat.Utime-p1.Stat.Utime) + (p2.Stat.Cutime - p1.Stat.Cutime)
-		system := int64(p2.Stat.Stime-p1.Stat.Stime) + (p2.Stat.Cstime - p1.Stat.Cstime)
+		user := int64(p2.Utime-p1.Utime) + (p2.Cutime - p1.Cutime)
+		system := int64(p2.Stime-p1.Stime) + (p2.Cstime - p1.Cstime)
 
 		p.Per = (float64(user+system) / float64((cpu2-cpu1)/uint64(runtime.NumCPU()))) * 100
 	}
@@ -98,11 +111,15 @@ func checkProcs(ss ...string) []uint64 {
 
 	for _, p := range *pd {
 		if p.Per > *fper {
-			log.Printf("[WARNING]: %v: %v%% (%v)", p.Pid, p.Per, p.Cmd)
+			log.Printf("[WARNING]: %v: %v%% (%v)", p.Pid, math.Trunc(p.Per), p.Cmd)
 			pdf = append(pdf, p.Pid)
+		} else if *fver == true {
+			log.Printf("%v: %v%% (%v)", p.Pid, math.Trunc(p.Per), p.Cmd)
 		}
 	}
-	//log.Printf("Found \033[1m%v\033[0m corresponding processes, with \033[1m%v\033[0m > %v%%.\n", len(*pd), len(pdf), *fper)
+	if *fver == true {
+		log.Printf("Found \033[1m%v\033[0m corresponding processes, with \033[1m%v\033[0m > %v%%.\n", len(*pd), len(pdf), *fper)
+	}
 
 	return pdf
 }

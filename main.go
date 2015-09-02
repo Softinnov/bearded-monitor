@@ -11,6 +11,7 @@ var (
 	fsys = flag.String("s", "usr1", "kill syscall sent")
 	fper = flag.Float64("p", 90, "percentage threshold before sending a kill signal")
 	fdur = flag.Duration("i", time.Duration(time.Minute), "interval of each check")
+	fver = flag.Bool("v", false, "verbose")
 
 	selfPID int = os.Getpid()
 )
